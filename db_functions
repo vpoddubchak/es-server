@@ -1,0 +1,31 @@
+CREATE OR REPLACE FUNCTION GetCountOfStreamersOnServer(integer) RETURNS bigint AS $$
+    SELECT count(id)
+      FROM Streamers 
+      WHERE server_id=$1;
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION GetLessLoadedServerId() RETURNS integer AS $$
+    SELECT id
+     FROM servers
+     ORDER BY getcountofstreamersonserver(id) ASC
+     LIMIT 1;
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION IsStreamerExists(varchar) RETURNS boolean AS $$
+ select exists(
+  SELECT id 
+   FROM streamers
+   WHERE name=$1
+);
+$$ LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION AddStreamer(varchar) RETURNS boolean AS $$
+BEGIN
+    IF isstreamerexists($1) THEN 
+      RETURN false;
+    ELSE
+      INSERT INTO Steramers(server_id, name) VALUES(getlessloadedserverid(), $1);
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
